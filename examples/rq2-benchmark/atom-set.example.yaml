@@ -1,0 +1,21 @@
+# Synthetic example, not benchmark gold.
+benchmark_id: example
+base_profile_ids: [base-example]
+atoms:
+  - id: ex-a1
+    statement: Researchers must be able to cite a dataset in a publication.
+    subject: dataset
+    modality: must
+    source_reference: {document: example-requirements.md, locator: "section 2, item 1"}
+  - id: ex-a2
+    statement: Each distribution should state the format of its file.
+    subject: distribution
+    modality: should
+    source_reference: {document: example-requirements.md, locator: "section 3, item 4"}
+  - id: ex-a1-cf
+    statement: Researchers should be able to cite a dataset in a publication.
+    subject: dataset
+    modality: should
+    source_reference: {document: example-requirements.md, locator: "section 2, item 1"}
+    counterfactual_of: ex-a1
+    expected_change: Citation becomes recommended instead of mandatory.

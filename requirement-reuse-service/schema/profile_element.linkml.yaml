@@ -1,0 +1,128 @@
+# Profile Element / Profile Delta - LinkML schema (RQ2 scoring contract)
+#
+# A ProfileElement is the RQ2 scoring unit: one (target class, property path)
+# pair that a profile adds or tightens on top of its base. A ProfileDelta is
+# the set of elements by which a profile differs from its base profile(s).
+# Gold deltas (published profile minus base, source = gold) and generated
+# deltas (compiled from a ProfileChangeSet, source = generated) use the same
+# shape, so the evaluator compares like with like. Inherited base constraints
+# are never ProfileElements (rule 1: score the delta).
+#
+# Mapping from ProfileChange (profile_change.linkml.yaml) to ProfileElement:
+#   ProfileChange.target_class (prefixed)  -> target_class (expanded IRI)
+#   ProfileChange.term_uri                 -> path
+#   ProfileChange.change_type:
+#     reuse_property                       -> kind = reuse
+#     specialize_property, add_constraint,
+#     add_controlled_vocabulary            -> kind = refine
+#     create_extension_property            -> kind = mint
+#     create_profile_class                 -> kind = class_addition (path empty)
+#     add_usage_note                       -> no element (not scored)
+#   ProfileChange.obligation_level         -> obligation
+#   ProfileChange.required = true          -> min_count = 1
+#   ProfileChange.multivalued = false      -> max_count = 1
+#   ProfileChange.range                    -> range_class or range_datatype
+#   ProfileChange.source_requirement_ids   -> source_atom_ids
+#   severity follows the existing generator: mandatory -> Violation,
+#   recommended -> Warning, optional -> Info.
+# Several ProfileChanges on the same (class, path) fold into ONE element.
+id: https://w3id.org/construct-dcat/profile-element
+name: profile_element
+title: Profile Element and Profile Delta
+description: >-
+  Scoring unit for RQ2: the (class, property) elements a profile adds to or
+  tightens on its base, with obligation, cardinality, range and vocabulary.
+license: https://www.apache.org/licenses/LICENSE-2.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  pe: https://w3id.org/construct-dcat/profile-element/
+default_prefix: pe
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+  ProfileDelta:
+    tree_root: true
+    description: Elements by which one profile differs from its base profile(s).
+    attributes:
+      profile_id:
+        required: true
+        description: Benchmark-local id of the profile (e.g. geo). Never shown to the generator.
+      base_profile_ids:
+        multivalued: true
+        required: true
+        description: One or more base profiles (profiles of profiles allowed).
+      source:
+        range: ElementSource
+        description: gold or generated, for the delta as a whole.
+      elements:
+        range: ProfileElement
+        multivalued: true
+        inlined_as_list: true
+      notes: {}
+
+  ProfileElement:
+    description: One (target class, property path) constraint added or tightened relative to the base.
+    attributes:
+      id:
+        description: Optional stable id, used for atom-to-element alignment in gold.
+      target_class:
+        required: true
+        range: uri
+        description: Expanded IRI of the target class (sh:targetClass).
+      path:
+        range: uri
+        description: Expanded IRI of the property path (sh:path). Empty only for class_addition.
+      kind:
+        range: ElementKind
+        required: true
+      obligation:
+        range: Obligation
+      min_count:
+        range: integer
+        minimum_value: 0
+      max_count:
+        range: integer
+        minimum_value: 0
+      range_class:
+        range: uri
+        description: sh:class
+      range_datatype:
+        range: uri
+        description: sh:datatype
+      node_kind:
+        range: NodeKind
+        description: sh:nodeKind
+      controlled_vocabulary:
+        multivalued: true
+        description: Allowed values (sh:in members) or a concept scheme IRI.
+      severity:
+        range: Severity
+      delta_status:
+        range: DeltaStatus
+        description: Set by the delta tool when comparing against the base.
+      source:
+        range: ElementSource
+      source_atom_ids:
+        multivalued: true
+        description: Atoms this element is derived from (generated) or aligned to (gold).
+      notes: {}
+
+enums:
+  ElementKind:
+    permissible_values:
+      reuse: {description: Existing term, newly constrained in this profile.}
+      refine: {description: Base already constrains it; this profile tightens it.}
+      mint: {description: New term in the profile's own namespace.}
+      class_addition: {description: New class or newly targeted class.}
+  Obligation:
+    permissible_values: {mandatory: {}, recommended: {}, optional: {}, unknown: {}}
+  NodeKind:
+    permissible_values: {IRI: {}, BlankNode: {}, Literal: {}, BlankNodeOrIRI: {}, BlankNodeOrLiteral: {}, IRIOrLiteral: {}}
+  Severity:
+    permissible_values: {Violation: {}, Warning: {}, Info: {}}
+  ElementSource:
+    permissible_values: {gold: {}, generated: {}}
+  DeltaStatus:
+    permissible_values: {added: {}, tightened: {}, unchanged: {}, loosened: {}}

@@ -1,0 +1,69 @@
+# RQ2 Atom Set - LinkML schema (RQ2 input contract)
+#
+# Term-free requirement atoms given to the RQ2 generator. Rule 2 (keep the
+# answer out of the input): statements contain no IRIs, no prefixed names and
+# no profile names; subjects are plain words.
+#
+# TODO(verify): align with RQ1's atom record, which lives in the RQ1
+# benchmark repository (outside this repo). Field names here are provisional
+# until that mapping is done.
+id: https://w3id.org/construct-dcat/rq2-atom
+name: rq2_atom
+title: RQ2 Atom Set
+description: Term-free requirement atoms used as input to RQ2 profile generation.
+license: https://www.apache.org/licenses/LICENSE-2.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ra: https://w3id.org/construct-dcat/rq2-atom/
+default_prefix: ra
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+  RQ2AtomSet:
+    tree_root: true
+    attributes:
+      benchmark_id:
+        required: true
+      base_profile_ids:
+        multivalued: true
+        required: true
+      atoms:
+        range: Atom
+        multivalued: true
+        inlined_as_list: true
+
+  Atom:
+    attributes:
+      id:
+        identifier: true
+      statement:
+        required: true
+        description: Natural-language requirement; no IRIs, prefixed names or profile names.
+        pattern: "^(?!.*(https?://|urn:|\\b[a-zA-Z][\\w-]*:[A-Za-z_])).*$"
+      subject:
+        required: true
+        description: Plain word, e.g. dataset, distribution, catalogue, data service, agent.
+        pattern: "^[a-z][a-z ]*$"
+      modality:
+        range: Modality
+        required: true
+        description: As stated in the source text, not normalised to an obligation.
+      source_reference:
+        range: SourceReference
+        inlined: true
+      counterfactual_of:
+        description: L4 only - id of the original atom this variant changes.
+      expected_change:
+        description: L4 only - how the correct output must differ from the published profile.
+
+  SourceReference:
+    attributes:
+      document: {required: true}
+      locator:
+        description: Section, table row, page or line range.
+
+enums:
+  Modality:
+    permissible_values: {must: {}, should: {}, may: {}, unspecified: {}}
